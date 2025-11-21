@@ -144,6 +144,10 @@ graph LR
 
     Entry3["Entry N<br/>UUID-N + XXX"]
 
+    Entry4["Entry 4<br/>UUID-1 + USD"]
+    Array4["Array[UUIDv7]"]
+    T4["UUIDv7-001<br/>DEPOSIT 658.90<br/>Transfer / USE-WIRE-001"]
+
     HashMap --> Entry1
     Entry1 --> Array1
     Array1 --> T1
@@ -155,6 +159,10 @@ graph LR
 
     HashMap --> Entry3
 
+    HashMap --> Entry4
+    Entry4 --> Array4
+    Array4 --> T4
+
     subgraph Perf["Performance"]
         P1["O(1) ledger lookup by UUID+Currency"]
         P2["Chronological order via UUIDv7"]
@@ -165,10 +173,13 @@ graph LR
     style Entry1 fill:#ffa500,stroke:#cc8400,color:#fff
     style Entry2 fill:#ffa500,stroke:#cc8400,color:#fff
     style Entry3 fill:#ffa500,stroke:#cc8400,color:#fff
+    style Entry4 fill:#ffa500,stroke:#cc8400,color:#fff
     style Array1 fill:#50c878,stroke:#2d7a4a,color:#fff
     style Array2 fill:#50c878,stroke:#2d7a4a,color:#fff
+    style Array4 fill:#50c878,stroke:#2d7a4a,color:#fff
     style T1 fill:#4a90e2,stroke:#2e5c8a,color:#fff
     style T2 fill:#4a90e2,stroke:#2e5c8a,color:#fff
     style T3 fill:#4a90e2,stroke:#2e5c8a,color:#fff
+    style T4 fill:#4a90e2,stroke:#2e5c8a,color:#fff
     style Perf fill:#34495e,stroke:#2c3e50,color:#fff
 ```
