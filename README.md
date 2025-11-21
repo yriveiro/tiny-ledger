@@ -88,12 +88,13 @@ graph TB
     end
 
     subgraph API["API"]
+        direction LR
         CreateAPI["POST /ledgers"]
         AddCurrencyAPI["POST /ledgers/{id}/currencies"]
-        BalanceAPI["GET /ledgers/{id}/balances/{currency}"]
-        HistoryAPI["GET /ledgers/{id}/transactions/{currency}"]
         DepositAPI["POST /ledgers/{id}/transactions/{currency}/deposit"]
         WithdrawalAPI["POST /ledgers/{id}/transactions/{currency}/withdrawal"]
+        BalanceAPI["GET /ledgers/{id}/balances/{currency}"]
+        HistoryAPI["GET /ledgers/{id}/transactions/{currency}"]
     end
 
     subgraph Service["Services"]
@@ -101,20 +102,20 @@ graph TB
     end
 
     subgraph DB["Database"]
-        LedgerDB["Ledger"]
+        LedgerDB["LedgerRepository"]
     end
 
     UI --> CreateAPI
+    UI --> AddCurrencyAPI
     UI --> DepositAPI
-    UI --> WithdrawAPI
+    UI --> WithdrawalAPI
     UI --> BalanceAPI
     UI --> HistoryAPI
-    UI --> GetAPI
 
     CreateAPI --> LedgerService
-    GetAPI --> LedgerService
+    AddCurrencyAPI --> LedgerService
     DepositAPI --> LedgerService
-    WithdrawAPI --> LedgerService
+    WithdrawalAPI --> LedgerService
     BalanceAPI --> LedgerService
     HistoryAPI --> LedgerService
 
