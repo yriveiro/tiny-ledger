@@ -1,0 +1,21 @@
+quarkus:
+  http:
+    port: 28081
+"%dev":
+  quarkus:
+    http:
+      port: 28081
+    log:
+      level: INFO
+      category:
+        "com.acme":
+          level: DEBUG
+"%test":
+  quarkus:
+    http:
+      test-port: 28081
+    log:
+      level: INFO
+      category:
+        "com.acme":
+          level: DEBUG

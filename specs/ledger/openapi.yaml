@@ -1,0 +1,601 @@
+openapi: 3.1.0
+info:
+  title: Ledger API
+  version: 1.0.0
+  description: API for creating and managing ledgers with transactions across multiple currencies
+servers:
+  - url: /api/v1
+paths:
+  /ledgers:
+    post:
+      summary: Create a new service
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateLedgerRequest'
+      responses:
+        '201':
+          description: Ledger successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateLedgerResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidResponse'
+        '409':
+          description: Ledger already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BackoffResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidResponse'
+
+  /ledgers/{id}/balances/{currency}:
+    get:
+      summary: Get balance for specific currency
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Ledger UUID
+        - name: currency
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^[A-Z]{3}$'
+            minLength: 3
+            maxLength: 3
+            description: ISO 4217 currency code
+            example: "EUR"
+      responses:
+        '200':
+          description: Current balance for currency
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BalanceResponse'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidResponse'
+        '404':
+          description: Ledger or currency account not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BackoffResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidResponse'
+
+  /ledgers/{id}/currencies:
+    post:
+      summary: Add a new currency account to service
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Ledger UUID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddCurrencyRequest'
+      responses:
+        '201':
+          description: Currency account successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurrencyLedgerResponse'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidResponse'
+        '404':
+          description: Ledger not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidResponse'
+        '409':
+          description: Currency account already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BackoffResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidResponse'
+
+  /ledgers/{id}/transactions/{currency}:
+    get:
+      summary: Get transaction history for specific currency
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Ledger UUID
+        - name: currency
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^[A-Z]{3}$'
+            minLength: 3
+            maxLength: 3
+            description: ISO 4217 currency code
+        - name: start
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+          description: Start timestamp (inclusive, ISO 8601)
+        - name: end
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+          description: End timestamp (inclusive, ISO 8601)
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 500
+            default: 100
+          description: Maximum number of transactions to return
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+          description: Number of transactions to skip
+      responses:
+        '200':
+          description: Transaction history for currency
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionsResponse'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidResponse'
+        '404':
+          description: Ledger or currency account not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BackoffResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidResponse'
+
+  /ledgers/{id}/transactions/{currency}/deposit:
+    post:
+      summary: Record a deposit transaction
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Ledger UUID
+        - name: currency
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^[A-Z]{3}$'
+            minLength: 3
+            maxLength: 3
+            description: ISO 4217 currency code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransactionRequest'
+      responses:
+        '201':
+          description: Deposit transaction recorded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidResponse'
+        '404':
+          description: Ledger or currency account not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidResponse'
+        '409':
+          description: Duplicate transaction
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BackoffResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidResponse'
+
+  /ledgers/{id}/transactions/{currency}/withdraw:
+    post:
+      summary: Record a withdrawal transaction
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Ledger UUID
+        - name: currency
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^[A-Z]{3}$'
+            minLength: 3
+            maxLength: 3
+            description: ISO 4217 currency code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransactionRequest'
+      responses:
+        '201':
+          description: Withdrawal transaction recorded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidResponse'
+        '404':
+          description: Ledger or currency account not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidResponse'
+        '409':
+          description: Duplicate transaction or insufficient balance
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidResponse'
+        '422':
+          description: Unprocessable entity (business logic error)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BackoffResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidResponse'
+
+components:
+  schemas:
+    ValidationResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Error message
+      required:
+        - message
+
+    InvalidResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Error message
+        errorId:
+          type: string
+          format: uuid
+          description: Unique error identifier for tracking
+      required:
+        - message
+
+    BackoffResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Throttling error message
+          example: "Rate limit exceeded"
+        retryAfter:
+          type: integer
+          format: int32
+          description: Number of seconds to wait before retrying
+          minimum: 1
+          example: 60
+      required:
+        - message
+        - retryAfter
+
+    CreateLedgerRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Ledger UUID (client-generated or server-generated if omitted)
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        currency:
+          type: string
+          pattern: '^[A-Z]{3}$'
+          minLength: 3
+          maxLength: 3
+          description: ISO 4217 currency code (defaults to EUR if omitted)
+          example: "EUR"
+      required: []
+
+    AddCurrencyRequest:
+      type: object
+      description: Request to add a new currency account to an existing service
+      properties:
+        currency:
+          type: string
+          pattern: '^[A-Z]{3}$'
+          minLength: 3
+          maxLength: 3
+          description: ISO 4217 currency code
+          example: "EUR"
+      required:
+        - currency
+
+    CurrencyLedgerResponse:
+      type: object
+      properties:
+        currency:
+          type: string
+          pattern: '^[A-Z]{3}$'
+          minLength: 3
+          maxLength: 3
+          description: ISO 4217 currency code
+        balance:
+          type: string
+          format: decimal
+          pattern: '^\d+(\.\d{1,2})?$'
+          description: Initial balance (always 0.00 for new ledgers)
+          example: "0.00"
+      required:
+        - currency
+        - balance
+
+    CreateLedgerResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Ledger UUID
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        currency:
+          type: string
+          pattern: '^[A-Z]{3}$'
+          minLength: 3
+          maxLength: 3
+          description: ISO 4217 currency code, default currency for will be EUR
+          example: "EUR"
+      required:
+        - id
+        - currency
+
+    BalanceResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Ledger UUID
+        currency:
+          type: string
+          pattern: '^[A-Z]{3}$'
+          minLength: 3
+          maxLength: 3
+          description: ISO 4217 currency code
+        balance:
+          type: string
+          format: decimal
+          pattern: '^-?\d+(\.\d{1,2})?$'
+          description: Current balance (string for precision)
+      required:
+        - id
+        - currency
+        - balance
+
+    TransactionsResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Ledger UUID
+        currency:
+          type: string
+          pattern: '^[A-Z]{3}$'
+          minLength: 3
+          maxLength: 3
+          description: ISO 4217 currency code
+        transactions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Transaction'
+      required:
+        - id
+        - currency
+        - transactions
+
+    TransactionRequest:
+      type: object
+      properties:
+        value:
+          type: string
+          format: decimal
+          description: Deposit/withdraw amount (positive number, max 2 decimal places)
+          example: "500.00"
+        description:
+          type: string
+          description: Transaction description
+          minLength: 1
+          maxLength: 255
+          example: "Salary Payment"
+        reference:
+          type: string
+          description: External reference identifier (for idempotency)
+          minLength: 1
+          maxLength: 100
+          example: "PAY-2025-001"
+      required:
+        - value
+        - description
+        - reference
+
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
+          description: Transaction UUID v7 (timestamp encoded in ID)
+          example: "0191a8c0-a4c0-7000-8000-000000000001"
+        type:
+          type: string
+          enum:
+            - DEPOSIT
+            - WITHDRAWAL
+          description: Transaction model
+        value:
+          type: string
+          format: decimal
+          pattern: '^\d+(\.\d{1,2})?$'
+          description: Transaction amount (always positive)
+        description:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: Transaction description
+        reference:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: External reference identifier
+      required:
+        - id
+        - model
+        - value
+        - description
+        - reference
+
+    TransactionResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Transaction UUID v7
+          example: "0191a8c0-a4c0-7000-8000-000000000001"
+      required:
+        - id
