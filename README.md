@@ -148,8 +148,8 @@ Makefile with different targets exists: :
 
 ### Testing
 
-- Run tests: `make test-api`
-- Test the API with the provided script: `./scripts/test.sh`
+- Run tests: `make test`
+- Run tests with bash script: `make test-api`
 
 ### Build Targets
 
